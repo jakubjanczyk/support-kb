@@ -1,0 +1,71 @@
+---
+layout: runbook
+title: '#4471 · three problems, not one'
+owner: jakubjanczyk
+status: draft
+reviewed: 2026-10-28
+signature: jakubjanczyk
+---
+
+<script>
+  import ProblemTable from '#lib/kb/ProblemTable.svelte';
+  import Callout from '#lib/kb/Callout.svelte';
+  import RenderStamp from '#lib/kb/RenderStamp.svelte';
+
+  const repo = 'https://github.com/jakubjanczyk/support-kb/issues';
+  const tickets = {
+    parser: { label: 'support-kb#1', href: `${repo}/1` },
+    hint: { label: 'support-kb#2', href: `${repo}/2` },
+    'one-day': { label: 'support-kb#3', href: `${repo}/3` },
+  };
+</script>
+
+[#4471](/kb/incidents/4471) is marked known: one issue, one parser fix queued. The reports merged
+into it show three problems. The queued fix closes only the first one.
+
+<Callout kind="warn">
+Shipping the parser fix will not end the reports. The booking-v3 hint and the one-day move stay
+broken, and each now has a ticket of its own.
+</Callout>
+
+## What #4471 holds
+
+<ProblemTable ticket={4471} {tickets} />
+
+The table counts each report once by id (the export repeats some rows) and is built from
+`reports-4471.json` at render time, so it moves with the desk's queue.
+
+## The three problems
+
+**`parser`: day and month swapped by the shared parser.** Every tenant writes the day first; the
+parser reads the month first. Any date with a day of 12 or less flips: 7 April becomes 4 July.
+It reaches the desk through every channel and every tenant. This is the fix #4471 has queued.
+
+**`hint`: the booking-v3 form tells people to type the month first.** booking-v3 prints
+`MM/DD/YYYY` under its date field. People at day-first tenants follow the hint, and the form reads
+what they typed the tenant's way. The date is wrong before the parser sees it, so the parser fix
+leaves it wrong. Only reports sent through the form at booking-v3 tenants belong here.
+
+**`one-day`: the date moves by one day, not a month.** The desk already noted these
+(`desk-notes.json`, `oneDayMove`) and still counted them under `parser`. They read like a
+time-zone or day-boundary shift: one meeting showing Tuesday in Lisbon and Monday in Toronto, an
+invite arriving before its booking. A parser fix does not touch them.
+
+## Why one ticket hid three
+
+- Intake tags a report from the reporter's **browser** locale. The cause depends on the
+  **tenant**: their locale and their booking form. The table's last numeric column counts the
+  reports intake tagged with another cause.
+- The merge looked at the symptom, "wrong date", not at what the report shows. A flipped month,
+  a form that asks for the wrong order and a one-day shift all read as "wrong date".
+- [Decision 0001](/kb/decisions/0001-dedupe-by-subject) and the
+  [triage page](/kb/triage/dedupe) were last reviewed in June 2024. Merge on cause, not on
+  subject or symptom.
+
+## For the desk
+
+- Keep #4471 for `parser` only. Move the other reports to their tickets.
+- Read the body before merging: does it show a day/month swap, or a one-day move?
+- Tag by tenant, not by browser.
+
+<RenderStamp {signature} />
