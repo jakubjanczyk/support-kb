@@ -3,11 +3,11 @@
   import notes from '#lib/data/desk-notes.json';
   import { type Report } from '#lib/kb/causes';
   import { tenantOf } from '#lib/kb/locales';
-  import { groupByProblem, mergedInto, type Problem } from '#lib/kb/problems';
+  import { groupByProblem, mergedInto } from '#lib/kb/problems';
 
-  // tickets: problem → the ticket that now owns it, e.g. { parser: { label: 'support-kb#1', href: '…' } }
-  let { ticket, tickets }: { ticket: number; tickets: Partial<Record<Problem, { label: string; href: string }>> } =
-    $props();
+  type Link = { label: string; href: string };
+  // tickets: cause → the ticket that now owns it; oneDay: the ticket for the one-day move.
+  let { ticket, tickets, oneDay }: { ticket: number; tickets: Record<string, Link>; oneDay?: Link } = $props();
 
   const merged = $derived(mergedInto(reports as Report[], ticket));
   const groups = $derived(groupByProblem(merged, tenantOf, notes.oneDayMove));
@@ -16,19 +16,19 @@
 <p class="sum">
   <strong>{merged.length}</strong> reports merged into #{ticket} ·
   <strong>{groups.length}</strong>
-  {groups.length === 1 ? 'problem' : 'problems'}
+  {groups.length === 1 ? 'cause' : 'causes'}
 </p>
 
 <table>
   <thead>
-    <tr><th>problem</th><th>reports</th><th>tenants</th><th>seen</th><th>intake tag wrong</th><th>ticket</th></tr>
+    <tr><th>cause</th><th>reports</th><th>tenants</th><th>seen</th><th>intake tag wrong</th><th>ticket</th></tr>
   </thead>
   <tbody>
-    {#each groups as g (g.problem)}
-      {@const t = tickets[g.problem]}
+    {#each groups as g (g.cause)}
+      {@const t = tickets[g.cause]}
       <tr class:open={!t}>
-        <td><code>{g.problem}</code></td>
-        <td>{g.count}</td>
+        <td><code>{g.cause}</code></td>
+        <td>{g.reports.length}</td>
         <td>{g.tenants}</td>
         <td>{g.firstSeen} → {g.lastSeen}</td>
         <td>{g.mistagged}</td>
@@ -38,8 +38,18 @@
   </tbody>
 </table>
 
+{#each groups as g (g.cause)}
+  {#if g.oneDay}
+    <p class="note">
+      {g.oneDay} of the <code>{g.cause}</code> reports read as a one-day move, not a flipped date; counted under
+      <code>{g.cause}</code> by tenant{#if oneDay}, tracked in <a href={oneDay.href}>{oneDay.label}</a>{/if}.
+    </p>
+  {/if}
+{/each}
+
 <style>
   .sum { font-size: 1.1rem; }
+  .note { color: var(--muted); font-size: 0.85em; }
   .open td { background: var(--warn-bg); }
   .open td:last-child { color: var(--warn); font-weight: 600; }
 </style>

@@ -16,8 +16,8 @@ signature: jakubjanczyk
   const tickets = {
     parser: { label: 'support-kb#1', href: `${repo}/1` },
     hint: { label: 'support-kb#2', href: `${repo}/2` },
-    'one-day': { label: 'support-kb#3', href: `${repo}/3` },
   };
+  const oneDay = { label: 'support-kb#3', href: `${repo}/3` };
 </script>
 
 [#4471](/kb/incidents/4471) is marked known: one issue, one parser fix queued. The reports merged
@@ -30,7 +30,7 @@ broken, and each now has a ticket of its own.
 
 ## What #4471 holds
 
-<ProblemTable ticket={4471} {tickets} />
+<ProblemTable ticket={4471} {tickets} {oneDay} />
 
 The table counts each report once by id (the export repeats some rows) and is built from
 `reports-4471.json` at render time, so it moves with the desk's queue.
@@ -46,8 +46,9 @@ It reaches the desk through every channel and every tenant. This is the fix #447
 what they typed the tenant's way. The date is wrong before the parser sees it, so the parser fix
 leaves it wrong. Only reports sent through the form at booking-v3 tenants belong here.
 
-**`one-day`: the date moves by one day, not a month.** The desk already noted these
-(`desk-notes.json`, `oneDayMove`) and still counted them under `parser`. They read like a
+**One-day move: the date moves by one day, not a month.** The desk already noted these
+(`desk-notes.json`, `oneDayMove`) and counts them under `parser`, where they are filed; the note
+under the table keeps them visible. They read like a
 time-zone or day-boundary shift: one meeting showing Tuesday in Lisbon and Monday in Toronto, an
 invite arriving before its booking. A parser fix does not touch them.
 
